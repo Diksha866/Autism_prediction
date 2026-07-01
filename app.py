@@ -9,16 +9,33 @@ try:
 except ImportError as e:
     raise ImportError("The 'streamlit' package is required. Install it with 'pip install streamlit'.") from e
 
+from pathlib import Path
+
 import pandas as pd
 import pickle
 
-# Load model
-with open("best_model.pkl", "rb") as f:
-    model = pickle.load(f)
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "best_model.pkl"
+ENCODERS_PATH = BASE_DIR / "encoders.pkl"
 
-# Load encoders
-with open("encoders.pkl", "rb") as f:
-    encoders = pickle.load(f)
+
+@st.cache_resource
+def load_artifacts():
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
+    if not ENCODERS_PATH.exists():
+        raise FileNotFoundError(f"Encoders file not found: {ENCODERS_PATH}")
+
+    with MODEL_PATH.open("rb") as f:
+        model = pickle.load(f)
+
+    with ENCODERS_PATH.open("rb") as f:
+        encoders = pickle.load(f)
+
+    return model, encoders
+
+
+model, encoders = load_artifacts()
 
 st.title("Autism Prediction App")
 
